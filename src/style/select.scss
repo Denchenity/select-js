@@ -1,0 +1,382 @@
+.select-js {
+
+    &-wrapper{
+        position: relative;
+        &._no-edit{
+            pointer-events: none;
+            background: rgba(239, 242, 243, 0.3);
+            cursor: not-allowed;
+
+            .select-js-arrow,
+            .select-js-clean {
+                display: none;
+            }
+        }
+
+        input{
+            height: 35px;
+            outline: none;
+            background: transparent;
+            width: 100%;
+            z-index: 9;
+            position: relative;
+            &:placeholder-shown ~ label{
+                opacity: 0;
+                transform: translate(12px, 0);
+            }
+            &:placeholder-shown ~ .select-js-clean{
+                opacity: 0;
+                z-index: -1; 
+            }
+        }
+    }
+
+    &-input{
+        &-enter{
+            border: none;
+            border-bottom: 1px solid #E1E8EA;
+            background: transparent;
+        }
+
+        &-choice{
+            border: 1px solid #E1E8EA;
+            border-radius: 3px;
+            padding: 6px 51px 6px 7px;
+            text-overflow: ellipsis;
+            cursor: pointer;
+            &:required:valid{
+                border-color: $green;
+            }
+            &:required:invalid{
+                border-color: $red;
+            }
+        }
+
+        &-number{
+            border: 1px solid #E1E8EA;
+            border-radius: 3px;
+            padding: 10px;
+            text-overflow: ellipsis;
+            cursor: pointer;
+            &::placeholder{
+                text-align: left;
+            }
+
+        }
+
+        
+    }
+
+    &-label{
+        top: 0;
+        position: absolute;
+        left: -8px;
+        color: rgba(49, 67, 83, 0.7);
+        z-index: 9;
+        font-weight: 300;
+        pointer-events: none;
+        transition: All 0.3s ease;
+        transform: translate(12px, -10px);
+        font-size: 11px;
+        opacity: 1;
+        padding: 0 4px;
+        background: #fff;
+    }
+
+    &-arrow{
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        background: url(../images/arr-bot.svg) no-repeat center center;
+        background-size: 100%;
+        width: 15px;
+        height: 15px;
+        transition: all 0.2s linear 0s;
+        z-index: 0;
+        cursor: pointer;
+    }
+
+    &-clean{
+        position: absolute;
+        top: 12px;
+        right: 30px;
+        width: 13px;
+        height: 12px;
+        background: url(../images/close-icon-black.svg) no-repeat center;
+        background-size: 100%;
+        opacity: 1;
+        z-index: 1;
+        cursor: pointer;
+
+        &:hover{ 
+            opacity: 0.5; 
+        }
+    }
+
+    &-textarea{
+        outline: none;
+        border: 1px solid #E1E8EA;
+        border-radius: 3px;
+        height: 150px;
+        max-height: 150px;
+        width: 100%;
+        padding: 10px;
+        text-overflow: ellipsis;
+        cursor: pointer;
+        resize: none;
+    }
+
+    &-file{
+        &-wrapper{
+            border-top: 1px solid $grey;
+            border-bottom: 1px solid $grey;
+            padding: 15px 0;
+            position:relative;
+        }
+        &-input{
+            border: none;
+            font-weight: 300;
+            outline: none;
+            // color: $text-basis-color;
+            width: 100%;
+            opacity: 0;
+
+            &::-webkit-file-upload-button{
+                display: none;
+            }
+
+            &:active,
+            &:focus{
+                outline: none;
+            }
+        }
+        &-label{
+            margin-bottom: 0;
+            color: #fff;
+
+            &::before{
+                content: 'Выбрать файл'; 
+                // color: $text-basis-color;
+                position: absolute;
+                right: 0;
+                top: 8px;
+                height: 35px;
+                border-radius: 3px;
+                border-color: $grey;
+                width: 160px;
+                background-color: $blue;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                font-weight: 300;
+                cursor: pointer;
+                &:hover{
+                    opacity: 0.6;
+                }
+            }
+        }
+        &-out {
+            &-empty{
+                position: absolute;
+                left: 0;
+                top: 15px;
+                color: $text-basis-color;
+                font-weight: 300;
+            }
+            &-items{
+                position: absolute;
+                left: 0;
+                top: 15px;
+                color: $text-basis-color;
+                font-weight: 300;
+                width: 62%;
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+            }
+            &-item{
+                padding-left: 10px;
+                display: inline-block;
+            }
+        }
+
+        &-delete{
+            display: none;
+            width: 35px;
+            height: 34px; 
+            background-color: $red;
+            position: absolute;
+            top: 9px;
+            right: 171px;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            border-radius: 3px;
+
+            &:hover{
+                opacity: 0.8;
+            }
+            &::before{
+                content: '';
+                background: url('../images/close-icon.svg')no-repeat;
+                width: 16px;
+                height: 16px;
+                background-size: cover;
+            }
+
+            &._show{
+                display: flex;
+            }
+        }
+        &-hidden-block-with-inputs{
+            position: absolute;
+            top: 0;
+            right: 0;
+            z-index: -1;
+            opacity: 0;
+        }
+    }
+
+    &-list{
+        position: absolute;
+        top: 35px;
+        left: 0;
+        right: 0;
+        background: #fff;
+        border-radius: 0px 0px 5px 5px;
+        box-shadow: 0px 4px 15px rgb(0 0 0 / 10%);
+        border-top: 2px solid #47A9D0;
+        opacity: 0;
+        transition: all 0.1s linear 0s;
+        z-index: -1;
+        color: rgba(49, 67, 83, 0.7);
+        max-height: 300px;
+        overflow: scroll;
+
+        & p {
+            padding: 6px 10px 6px 15px;
+            margin: 0;
+            overflow: hidden;
+            cursor: pointer;
+
+            &:hover{
+                color: #153248; 
+            }
+
+            &[link-second]{
+                padding-left: 15px;
+                position: relative;
+                &::before{
+                    content: "";
+                    display: block;
+                    position: absolute;
+                    top: 9px;
+                    left: 0;
+                    height: 2px;
+                    width: 8px;
+                    background-color: $blue;
+                }
+            }
+
+            &[link-third]{
+                padding-left: 30px;
+                position: relative;
+                &::before{
+                    content: "";
+                    display: block;
+                    position: absolute;
+                    top: 9px;
+                    left: 17px;
+                    height: 2px;
+                    width: 8px;
+                    background-color: #253135;
+                }
+            }
+
+            &.selected{
+                background-color: #43a2c829;
+            }
+        }
+
+        & [block-first]{
+            display: none;
+            
+            &._open{
+                display: block;
+            }
+            
+        }
+
+        & [block-second]{
+            display: none;
+            &._open{
+                display: block;
+            }
+        }
+
+        
+
+    }
+
+    &-subnav{
+        &-second-level{
+            padding-left: 10px;
+        }
+    }
+
+    &-backdrop{
+        display: none;
+    }
+
+}
+._open-select-js-list {
+    & .select-js-arrow{
+        transform: rotate(180deg);
+    }
+
+    & .select-js-list{
+        z-index: 10;
+        opacity: 1;
+    }
+
+    & .select-js-backdrop{
+        display: block;
+        background: transparent;
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        opacity: 0;
+        z-index: 8;
+        cursor: pointer;
+    }
+}
+
+
+
+
+.modal-js {
+    .select-js-arrow{
+        z-index: 0;
+    }
+}
+
+@media (max-width: 759px){
+    .select-js{
+        &-wrapper{
+            input{
+                height: 45px;
+            }
+        }
+        &-arrow{
+            top: 17px;
+        }
+        &-clean{
+            top: 17px;
+        }
+    }
+}
+
+
+
