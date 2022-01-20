@@ -105,7 +105,7 @@
         background: url(../images/close-icon-black.svg) no-repeat center;
         background-size: 100%;
         opacity: 1;
-        z-index: 1;
+        z-index: 9;
         cursor: pointer;
 
         &:hover{ 
@@ -270,7 +270,7 @@
                     content: "";
                     display: block;
                     position: absolute;
-                    top: 9px;
+                    top: 15px;
                     left: 0;
                     height: 2px;
                     width: 8px;
@@ -285,7 +285,7 @@
                     content: "";
                     display: block;
                     position: absolute;
-                    top: 9px;
+                    top: 15px;
                     left: 17px;
                     height: 2px;
                     width: 8px;
@@ -320,7 +320,7 @@
 
     &-subnav{
         &-second-level{
-            padding-left: 10px;
+            padding-left: 15px;
         }
     }
 
@@ -378,5 +378,70 @@
     }
 }
 
+
+//иерархическое меню
+.select-js{
+    &-list{
+        & .hierarchy-menu{
+
+            &__main {
+                display: block !important;
+                list-style: none;
+                padding: 0;
+                margin: 0;
+                ul{
+                    list-style: none; 
+                }
+            }
+
+            &__subnav{
+                display: none;
+            }
+
+            &__item{
+                color:rgba(49, 67, 83, 0.7);
+                cursor: pointer;
+                padding: 3px 8px 3px 8px;
+                border-bottom: 1px solid #E1E8EA;
+                user-select: none;
+                &:last-child{
+                    border:none;
+                }
+                &.has-child{
+                    
+                    &::before{
+                        content: url('../images/folder-icon.svg');
+                        height: 22px;
+                        width: 20px;
+                        margin-right: 5px;
+                        display: inline-block;
+                        position: relative;
+                        top: 3px;
+                    }
+                }
+                &:hover{
+                    color: #153248;
+                }
+                &.selected{
+                    background-color: rgba(67,162,200,0.16078);
+                }
+                span{
+                    pointer-events: none;
+                }
+
+            }
+        }
+
+        & .open-hierarchy-menu{
+            & > .hierarchy-menu__subnav{
+                display: block;
+            }
+
+            &.has-child::before{
+                content: url('../images/folder-icon-open.svg') !important;
+            }
+        }
+    }
+}
 
 
