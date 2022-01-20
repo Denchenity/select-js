@@ -1,19 +1,23 @@
+//import { parseDate } from '../functions';
 //Description
 // заполнить лист передать в data массив [{name:'Name', id:'100'}]
-
 
 function getTemplate(option){
 
     let text = '';
     let id = '';
-    
-    let list = option.data.map(item => {
-        if(item.id == option.selectedId){
-            text = item.name;
-            id = item.id;
-        }
-        return `<p data-type="list-item" data-id="${item.id}">${item.name}</p>`;
-    });
+
+    let list = [];
+
+    if(option.data != undefined || option.data != null){
+        list = option.data.map(item => {
+            if(item.id == option.selectedId){
+                text = item.name;
+                id = item.id;
+            }
+            return `<p data-type="list-item" data-id="${item.id}">${item.name}</p>`;
+        });
+    }
 
     return `
         <div data-type="backdrop" class="select-js-backdrop"></div>
@@ -26,7 +30,7 @@ function getTemplate(option){
     `;
 }
 
-export class Select {
+export class SelectV2 {
 
     constructor(option){
 
@@ -61,6 +65,14 @@ export class Select {
         this.list = this.$wrapper.querySelector('[data-type="list"]');
 
         this.#checkEdit();
+
+        this.hierarchy = option.hierarchy; // принимает массив [{docid,groupDoc,isgroup,Name}]
+
+        if(this.hierarchy){
+            if(this.hierarchy.length != 0){
+                this.hierarchyMenu();
+            }
+        }
     
     }
     
@@ -94,7 +106,7 @@ export class Select {
         }else if(type === 'clean'){
             this.input.value = '';
             this.inputHidden.value = '';
-            this.chekErrorClass();
+            // this.chekErrorClass();
             this.refreshSelected();
         }else if(type === 'list-item'){
             this.select(event.target.dataset.id);
@@ -107,7 +119,7 @@ export class Select {
         
         let value = event.target.value;
 
-        let search = this.option.data.filter(el => el.name.includes(value));
+        let search = this.option.data.filter(el => searchItems(el.name, value));
 
         this.list.innerHTML = getItems(search);
 
@@ -116,6 +128,17 @@ export class Select {
                 return `<p data-type="list-item" data-id="${item.id}">${item.name}</p>`;
             });
             return result.join('');
+        }
+
+        function searchItems(elem, value){
+            let bool = false;
+            let regexLeft = new RegExp('^' + value, 'i');
+            let regexRight = new RegExp(' ' + value, 'i');
+            if(regexLeft.test(elem) || regexRight.test(elem)){
+                bool = true;
+            }
+
+            return bool;
         }
 
         if(value === ''){
@@ -182,5 +205,177 @@ export class Select {
         this.$wrapper.parentElement.innerHTML = '';
 
         this.input.removeEventListener('input', this.inputHandler);
+    }
+
+    hierarchyMenu(){
+        const data = this.hierarchy;
+        const wrapper = this.$wrapper;
+        const list = this.list;
+        const inputHidden = this.inputHidden;
+        const inputText = this.input;
+
+        
+
+        let first = data.filter(el => el.groupDoc == 0);
+
+        first.forEach(el => {
+
+            if(isGroup(el)){
+                checkChild(createSubnav(el));
+            }
+            
+        })
+
+        function checkChild(arr){
+            arr.forEach(el => {
+                if(isGroup(el)){
+                    checkChild(createSubnav(el));
+                }
+            });
+        }
+
+        function createSubnav(el){
+            let { docid } = el;
+            let arr = data.filter(el => docid == el.groupDoc);
+            el.child = arr;
+            return arr;
+        }
+
+        function isGroup(el){
+            return el.isgroup === true ? true : false;
+        }
+
+
+        let firstLevel = [];
+        data.forEach(el => {
+            if(el.groupDoc == 0){
+                firstLevel.push(el);
+            }
+        });
+
+        //сортировка по DOB(если есть)
+        if(firstLevel[0].DOB){
+            let copyFirstLvl = firstLevel.map(el => el);
+            
+            firstLevel.length = 0;
+            
+            copyFirstLvl.sort(function(a,b){
+                return parseFloat(Date.parse(parseDate(a.DOB))) - parseFloat(Date.parse(parseDate(b.DOB)));
+            });
+
+            let filterFirstLvl = copyFirstLvl.filter(el => el.DOB != '');
+            let transferringPeriod = copyFirstLvl.find(el => el.DOB == '');
+            filterFirstLvl.push(transferringPeriod);
+            filterFirstLvl.forEach(el => firstLevel.push(el));
+        }
+
+        let secondLevel = [];
+        firstLevel.forEach(firstLink => {
+            let docid = firstLink.docid;
+            let arr = [];
+            data.forEach(el => {
+                if(el.groupDoc == docid){
+                    arr.push(el);
+                }
+            });
+            secondLevel.push(arr);
+        });
+
+        let thirdLevel = [];
+        secondLevel.forEach(arr => {
+            arr.forEach(el => {
+                let arr = [];
+                let docid = el.docid;
+                data.forEach(el => {
+                    if(el.groupDoc == docid){
+                        arr.push(el);
+                    }
+                });
+                thirdLevel.push(arr);
+            });
+        });
+
+        firstLevel.forEach((first,i) => {
+            let wrapper = document.createElement('div');
+            wrapper.classList.add('select-js-subnav-first-level');
+            let pFirst = document.createElement('p');
+            pFirst.textContent = first.name;
+            pFirst.setAttribute('DocID', first.docid);
+            pFirst.setAttribute('link-first', i);
+            pFirst.addEventListener('click', openSubnavFirst);
+
+            let divFirst = document.createElement('div');
+            divFirst.classList.add('select-js-list-subnav');
+            divFirst.setAttribute('block-first', i);
+
+            wrapper.append(pFirst);
+            wrapper.append(divFirst);
+            list.append(wrapper);
+
+        });
+
+        let firstLevelBox = list.querySelectorAll('[block-first]');
+        let tempSecondArray = [];
+        secondLevel.forEach(array => {
+            let wrapper = document.createElement('div');
+            wrapper.classList.add('select-js-subnav-second-level');
+            array.forEach((el,i)=>{
+                let p = document.createElement('p');
+                p.textContent = el.name;
+                p.setAttribute('DocID', el.docid);
+                p.setAttribute('link-second', i);
+                p.addEventListener('click', openSubnavSecond)
+
+                let thridLevel = document.createElement('div');
+                thridLevel.classList.add('select-js-subnav-third-level');
+                thridLevel.setAttribute('block-second', i)
+                let div = document.createElement('div');
+                div.append(p);
+                div.append(thridLevel);
+                wrapper.append(div);
+
+            });
+            tempSecondArray.push(wrapper)
+        });
+        for(let i =0; i < firstLevelBox.length; i++){
+            firstLevelBox[i].append(tempSecondArray[i]);
+        }
+
+        let thirdLevelBox = list.querySelectorAll('.select-js-subnav-third-level');
+        for(let i =0; i < thirdLevelBox.length; i++){
+            thirdLevel[i].forEach(el => {
+                let p = document.createElement('p');
+                p.textContent = el.name;
+                p.setAttribute('DocID', el.docid);
+                    p.setAttribute('link-third', i);
+
+                    thirdLevelBox[i].append(p)
+            });
+        }
+
+        //программируем subnav
+        function openSubnavFirst(event){
+            let link = event.target;
+            let value = link.getAttribute('link-first')
+            let list = link.parentElement.querySelector(`[block-first="${value}"]`);
+            list.classList.toggle('_open')
+        }
+        function openSubnavSecond(event){
+            let link = event.target;
+            let value = link.getAttribute('link-second')
+            let list = link.parentElement.querySelector(`[block-second="${value}"]`);
+            list.classList.toggle('_open')
+        }
+
+        let allP = wrapper.querySelectorAll('p');
+        allP.forEach(p => {
+            p.addEventListener('dblclick', ()=> {
+                let text = p.textContent;
+                let docid = p.getAttribute('DocID');
+                inputText.value = text;
+                inputHidden.value = docid;
+                wrapper.classList.remove('_open-select-js-list');
+            });
+        });
     }
 }
