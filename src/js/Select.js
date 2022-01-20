@@ -1,4 +1,3 @@
-import { parseDate } from '../functions';
 //Description
 // заполнить лист передать в data массив [{name:'Name', id:'100'}]
 
@@ -108,8 +107,11 @@ export class SelectV2 {
         }else if(type === 'clean'){
             this.input.value = '';
             this.inputHidden.value = '';
-            // this.chekErrorClass();
             this.refreshSelected();
+            if(this.ul){
+                this.refreshSelectedHierarchy();
+                this.closeHierarchy();
+            }
         }else if(type === 'list-item'){
             this.select(event.target.dataset.id);
         }else if(type === 'backdrop'){
@@ -211,7 +213,6 @@ export class SelectV2 {
 
     hierarchyMenu(){
         const data = this.hierarchy;
-        console.log(JSON.stringify(data))
         
         //рекурсия для меню(раскладывает в каждого парента своих чилдов)
         let first = data.filter(el => el.groupDoc == 0);
@@ -344,5 +345,9 @@ export class SelectV2 {
     }
     refreshSelectedHierarchy(){
         this.ul.querySelectorAll('.selected').forEach(el => el.classList.remove('selected'));
+    }
+
+    closeHierarchy(){
+        this.ul.querySelectorAll('open-hierarchy-menu').forEach(el => el.classList.remove('open-hierarchy-menu'));
     }
 }
