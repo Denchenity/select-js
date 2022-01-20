@@ -1,4 +1,4 @@
-//import { parseDate } from '../functions';
+import { parseDate } from '../functions';
 //Description
 // заполнить лист передать в data массив [{name:'Name', id:'100'}]
 
@@ -70,7 +70,9 @@ export class SelectV2 {
 
         if(this.hierarchy){
             if(this.hierarchy.length != 0){
-                this.hierarchyMenu();
+               this.ul = this.hierarchyMenu();
+                this.list.innerHTML = '';
+                this.list.append(this.ul);
             }
         }
     
@@ -209,13 +211,9 @@ export class SelectV2 {
 
     hierarchyMenu(){
         const data = this.hierarchy;
-        const wrapper = this.$wrapper;
-        const list = this.list;
-        const inputHidden = this.inputHidden;
-        const inputText = this.input;
-
+        console.log(JSON.stringify(data))
         
-
+        //рекурсия для меню(раскладывает в каждого парента своих чилдов)
         let first = data.filter(el => el.groupDoc == 0);
 
         first.forEach(el => {
@@ -224,7 +222,7 @@ export class SelectV2 {
                 checkChild(createSubnav(el));
             }
             
-        })
+        });
 
         function checkChild(arr){
             arr.forEach(el => {
@@ -245,137 +243,106 @@ export class SelectV2 {
             return el.isgroup === true ? true : false;
         }
 
+        //рисуем меню из first
+        let menu = [];
 
-        let firstLevel = [];
-        data.forEach(el => {
-            if(el.groupDoc == 0){
-                firstLevel.push(el);
+        let ul = document.createElement('ul');
+        ul.classList.add('hierarchy-menu__main');
+
+        menu = first.map(el => {
+            let li = createLi(el);
+
+            if(checkItem(el)){
+                li.append(createUl(el.child));
+                li.classList.add('has-child');
             }
+
+            ul.append(li);
         });
 
-        //сортировка по DOB(если есть)
-        if(firstLevel[0].DOB){
-            let copyFirstLvl = firstLevel.map(el => el);
-            
-            firstLevel.length = 0;
-            
-            copyFirstLvl.sort(function(a,b){
-                return parseFloat(Date.parse(parseDate(a.DOB))) - parseFloat(Date.parse(parseDate(b.DOB)));
-            });
+        function createUl(child){
+            let ul = document.createElement('ul');
+            ul.dataset.type = 'hierarchy-menu';
+            ul.classList.add('hierarchy-menu__subnav');
 
-            let filterFirstLvl = copyFirstLvl.filter(el => el.DOB != '');
-            let transferringPeriod = copyFirstLvl.find(el => el.DOB == '');
-            filterFirstLvl.push(transferringPeriod);
-            filterFirstLvl.forEach(el => firstLevel.push(el));
-        }
-
-        let secondLevel = [];
-        firstLevel.forEach(firstLink => {
-            let docid = firstLink.docid;
-            let arr = [];
-            data.forEach(el => {
-                if(el.groupDoc == docid){
-                    arr.push(el);
+            child.forEach(el => {
+                let li = createLi(el);
+                if(checkItem(el)){
+                    li.append(createUl(el.child));
+                    li.classList.add('has-child');
                 }
+                ul.append(li);
             });
-            secondLevel.push(arr);
-        });
 
-        let thirdLevel = [];
-        secondLevel.forEach(arr => {
-            arr.forEach(el => {
-                let arr = [];
-                let docid = el.docid;
-                data.forEach(el => {
-                    if(el.groupDoc == docid){
-                        arr.push(el);
-                    }
-                });
-                thirdLevel.push(arr);
-            });
-        });
-
-        firstLevel.forEach((first,i) => {
-            let wrapper = document.createElement('div');
-            wrapper.classList.add('select-js-subnav-first-level');
-            let pFirst = document.createElement('p');
-            pFirst.textContent = first.name;
-            pFirst.setAttribute('DocID', first.docid);
-            pFirst.setAttribute('link-first', i);
-            pFirst.addEventListener('click', openSubnavFirst);
-
-            let divFirst = document.createElement('div');
-            divFirst.classList.add('select-js-list-subnav');
-            divFirst.setAttribute('block-first', i);
-
-            wrapper.append(pFirst);
-            wrapper.append(divFirst);
-            list.append(wrapper);
-
-        });
-
-        let firstLevelBox = list.querySelectorAll('[block-first]');
-        let tempSecondArray = [];
-        secondLevel.forEach(array => {
-            let wrapper = document.createElement('div');
-            wrapper.classList.add('select-js-subnav-second-level');
-            array.forEach((el,i)=>{
-                let p = document.createElement('p');
-                p.textContent = el.name;
-                p.setAttribute('DocID', el.docid);
-                p.setAttribute('link-second', i);
-                p.addEventListener('click', openSubnavSecond)
-
-                let thridLevel = document.createElement('div');
-                thridLevel.classList.add('select-js-subnav-third-level');
-                thridLevel.setAttribute('block-second', i)
-                let div = document.createElement('div');
-                div.append(p);
-                div.append(thridLevel);
-                wrapper.append(div);
-
-            });
-            tempSecondArray.push(wrapper)
-        });
-        for(let i =0; i < firstLevelBox.length; i++){
-            firstLevelBox[i].append(tempSecondArray[i]);
+            return ul;
         }
 
-        let thirdLevelBox = list.querySelectorAll('.select-js-subnav-third-level');
-        for(let i =0; i < thirdLevelBox.length; i++){
-            thirdLevel[i].forEach(el => {
-                let p = document.createElement('p');
-                p.textContent = el.name;
-                p.setAttribute('DocID', el.docid);
-                    p.setAttribute('link-third', i);
-
-                    thirdLevelBox[i].append(p)
-            });
+        function checkItem(el){
+            if(el.child){
+                return el.child?.length != 0 ? true : false;
+            }else {
+                return false
+            }
         }
 
-        //программируем subnav
-        function openSubnavFirst(event){
-            let link = event.target;
-            let value = link.getAttribute('link-first')
-            let list = link.parentElement.querySelector(`[block-first="${value}"]`);
-            list.classList.toggle('_open')
-        }
-        function openSubnavSecond(event){
-            let link = event.target;
-            let value = link.getAttribute('link-second')
-            let list = link.parentElement.querySelector(`[block-second="${value}"]`);
-            list.classList.toggle('_open')
+        function createLi(el){
+            let li = document.createElement('li');
+            li.setAttribute('docid', el.docid);
+            li.dataset.type = 'hierarchy-item';
+            li.classList.add('hierarchy-menu__item');
+            let text = document.createElement('span');
+            text.textContent = el.name;
+            li.append(text);
+            return li;
         }
 
-        let allP = wrapper.querySelectorAll('p');
-        allP.forEach(p => {
-            p.addEventListener('dblclick', ()=> {
-                let text = p.textContent;
-                let docid = p.getAttribute('DocID');
-                inputText.value = text;
-                inputHidden.value = docid;
-                wrapper.classList.remove('_open-select-js-list');
-            });
-        });
+        this.clickHandlerHierarchy = this.clickHandlerHierarchy.bind(this);
+        ul.addEventListener('click', this.clickHandlerHierarchy);
+
+        this.dblClickHierarchy = this.dblClickHierarchy.bind(this);
+        ul.addEventListener('dblclick', this.dblClickHierarchy);
+
+        return ul;
+    }
+
+    //методы для иерархического меню
+    clickHandlerHierarchy(event){
+        let { type } = event.target.dataset;
+        if(type == 'hierarchy-item'){
+            toggle(event.target);
+        }
+
+        function open(item){
+            item.classList.add('open-hierarchy-menu');
+        }
+
+        function close(item){
+            item.classList.remove('open-hierarchy-menu');
+        }
+
+        function isOpen(item){
+            return item.classList.contains('open-hierarchy-menu');
+        }
+
+        function toggle(item){
+            isOpen(item) ? close(item) : open(item);
+        }
+    }
+
+    dblClickHierarchy(event){
+        let { type } = event.target.dataset;
+        if(type == 'hierarchy-item'){
+            const id = event.target.getAttribute('docid');
+            const text = event.target.firstChild.textContent;
+            this.input.value = text;
+            this.inputHidden.value = id;
+            this.toggle();
+            this.refreshSelectedHierarchy();
+            event.target.classList.add('selected');
+            event.target.classList.remove('open-hierarchy-menu');
+        }
+    }
+    refreshSelectedHierarchy(){
+        this.ul.querySelectorAll('.selected').forEach(el => el.classList.remove('selected'));
     }
 }
